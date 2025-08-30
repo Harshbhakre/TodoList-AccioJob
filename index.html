@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>Todo List</title>
+  </head>
+  <body>
+    <main class="p-2">
+      <h1 class="text-center text-5xl font-bold">To-Do List</h1>
+      <div class="flex justify-around py-10 gap-x-1 gap-y-2 w-full flex-wrap">
+        <input
+          class="border-2 px-2 h-10 md:w-100 w-full"
+          type="text"
+          placeholder="Item Name"
+          id="itemName"
+        />
+        <input
+          class="border-2 px-2 h-10 md:w-80 w-full"
+          type="date"
+          id="deadline"
+        />
+        <select
+          class="border-2 px-2 h-10 md:w-60 w-full"
+          id="selectedPriority"
+        >
+          <option value="none">Priority</option>
+          <option value="0">High</option>
+          <option value="1">Medium</option>
+          <option value="2">Low</option>
+        </select>
+        <input
+          class="h-10 w-50 bg-black text-white hover:bg-white border border-black hover:text-black duration-200 cursor-pointer"
+          type="button"
+          value="Add Item"
+          id="addItem"
+        />
+      </div>
+
+
+      <div class="pt-5 font-semibold">
+        <h3 class="text-2xl">Today's TodoList</h3>
+        <div id="todayList" class="h-30 overflow-auto"></div>
+      </div>
+      <div class="pt-5 font-semibold">
+        <h3 class="text-2xl">Future TodoList</h3>
+        <div id="futureList" class="h-30 overflow-auto"></div>
+      </div>
+      <div class="pt-5 font-semibold">
+        <h3 class="text-2xl">Completed TodoList</h3>
+        <div id="completedList" class="h-30 overflow-auto"></div>
+      </div>
+    </main>
+
+    <script>
+      let itemName = document.querySelector("#itemName");
+      let deadline = document.querySelector("#deadline");
+      let priority = document.querySelector("#selectedPriority");
+      let addItem = document.querySelector("#addItem");
+
+      let todayList = document.querySelector("#todayList");
+      let futureList = document.querySelector("#futureList");
+      let completedList = document.querySelector("#completedList");
+
+      let priorityData = ["High", "Medium", "Low"];
+
+      let data = JSON.parse(localStorage.getItem("tasks")) || [];
+      let completed = JSON.parse(localStorage.getItem("completed")) || [];
+      let taskId = parseInt(localStorage.getItem("taskId")) || 1;
+
+
+      function saveToLocalStorage() {
+        localStorage.setItem("tasks", JSON.stringify(data));
+        localStorage.setItem("completed", JSON.stringify(completed));
+        localStorage.setItem("taskId", taskId);
+      }
+
+      addItem.addEventListener("click", () => {
+        if (
+          itemName.value.trim() === "" ||
+          deadline.value === "" ||
+          priority.value === "none"
+        ) {
+          alert("Please fill the complete form");
+          return;
+        }
+
+        let setDate = new Date(deadline.value);
+
+        data.push({
+          id: taskId,
+          name: itemName.value.trim(),
+          date: setDate.toLocaleDateString(),
+          priority: priorityData[priority.value],
+        });
+        taskId++;
+
+        itemName.value = "";
+        deadline.value = "";
+        priority.value = "none";
+
+        saveToLocalStorage();
+        filterTasks();
+      });
+
+
+      function filterTasks() {
+        let Tdate = new Date().toLocaleDateString();
+
+        let today = data.filter((ele) => ele.date === Tdate);
+        let future = data.filter((ele) => ele.date !== Tdate);
+
+        todayList.innerHTML = renderTasks(today);
+        futureList.innerHTML = renderTasks(future);
+        completedList.innerHTML = renderTasks(completed, true);
+      }
+
+
+      function renderTasks(list, isCompleted = false) {
+        return list
+          .map(
+            (ele, idx) => `
+          <div
+            class="md:text-lg text-sm bg-black w-full px-3 flex justify-between items-center text-white h-12 rounded border border-white font-normal"
+          >
+            <p class="w-40">${idx + 1}. ${ele.name}</p>
+            <p class="w-40">${ele.date}</p>
+            <p class="w-40">Priority: ${ele.priority}</p>
+            <div class="flex justify-between gap-2">
+              ${
+                !isCompleted
+                  ? `<button onclick="onComplete(${ele.id})" class="cursor-pointer hover:scale-110">✅</button>`
+                  : ""
+              }
+              <button onclick="onDelete(${ele.id}, ${isCompleted})" class="cursor-pointer hover:scale-110">❌</button>
+            </div>
+          </div>`
+          )
+          .join("");
+      }
+
+
+      function onComplete(id) {
+        let index = data.findIndex((task) => task.id === id);
+        if (index !== -1) {
+          completed.push(data[index]);
+          data.splice(index, 1);
+          saveToLocalStorage();
+          filterTasks();
+        }
+      }
+
+
+      function onDelete(id, isCompleted = false) {
+        if (isCompleted) {
+          completed = completed.filter((task) => task.id !== id);
+        } else {
+          data = data.filter((task) => task.id !== id);
+        }
+        saveToLocalStorage();
+        filterTasks();
+      }
+
+      filterTasks();
+    </script>
+  </body>
+</html>
