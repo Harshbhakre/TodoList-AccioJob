@@ -58,11 +58,10 @@
       let deadline = document.querySelector("#deadline");
       let priority = document.querySelector("#selectedPriority");
       let addItem = document.querySelector("#addItem");
-
+      let Tdate = new Date().toLocaleDateString();
       let todayList = document.querySelector("#todayList");
       let futureList = document.querySelector("#futureList");
       let completedList = document.querySelector("#completedList");
-
       let priorityData = ["High", "Medium", "Low"];
 
       let data = JSON.parse(localStorage.getItem("tasks")) || [];
@@ -77,16 +76,19 @@
       }
 
       addItem.addEventListener("click", () => {
-        if (
-          itemName.value.trim() === "" ||
-          deadline.value === "" ||
-          priority.value === "none"
-        ) {
-          alert("Please fill the complete form");
-          return;
-        }
-
         let setDate = new Date(deadline.value);
+        let today = new Date();
+      
+if (
+  itemName.value.trim() === "" ||
+  deadline.value === "" ||
+  priority.value === "none" ||
+  setDate < today.setHours(0,0,0,0) 
+) {
+  alert("Please fill the Complete form and Accurately");
+  return;
+}
+
 
         data.push({
           id: taskId,
@@ -106,7 +108,7 @@
 
 
       function filterTasks() {
-        let Tdate = new Date().toLocaleDateString();
+ 
 
         let today = data.filter((ele) => ele.date === Tdate);
         let future = data.filter((ele) => ele.date !== Tdate);
